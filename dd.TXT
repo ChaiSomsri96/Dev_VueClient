@@ -1,0 +1,23 @@
+Function GetColorText(pRange As Range) As String
+    'Updateby20141105
+    Dim xOut As String
+    Dim xValue As String
+    Dim i As Long
+    xValue = pRange.Text
+    comma = 0
+    For i = 1 To VBA.Len(xValue)
+ 
+        If pRange.Characters(i, 1).Font.Color = vbRed Then
+            xOut = xOut & VBA.Mid(xValue, i, 1)
+            comma = 1
+        Else
+            If comma = 1 Then
+                xOut = xOut + ","
+                comma = 0
+            End If
+        End If
+ 
+    Next
+ 
+    GetColorText = xOut
+End Function

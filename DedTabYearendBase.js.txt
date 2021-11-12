@@ -1,0 +1,498 @@
+Ext.define('Magic.view.yearend.employee.dedrequest.base.DedTabYearendBase', {
+    extend: 'Ext.form.Panel',
+    alias: 'widget.dedtab_yearend_base',
+    controller: 'dedtab_yearend_base',
+    layout: { type: 'vbox' },
+    frame: false, bordeer:false, autoScroll: true, submitEmptyText: false,
+    defaults: { width: 1000 },
+    step: 'BASE',
+
+    dockedItems:  [{
+        xtype: 'container',
+        items: [{
+            xtype: 'toolbar', dock: 'top', padding: 2, width: 1010, border: false,
+            items: [
+                {
+                    xtype: 'yearend_next_btn',
+                    bind: {hidden: '{!deductionrequest.isEditing}'}
+                },
+                { xtype: 'yearend_next_label' },
+                '->',
+                {
+                    xtype: 'yearend_help_btn', text: '기본사항 도움말',
+                    docUrl: '/blocked/yes-help/{0}/base.htm',
+                    handler: 'showHelpBox'
+                },
+                {
+                    xtype: 'yearend_memo_btn',
+                    bind: {
+                        hidden: '{deductionrequest.isSelf}',
+                        memoParam: '{deductionrequest}'
+                    }
+                }
+            ]
+        }]
+    }],
+
+    items: [
+        {
+            xtype: 'toolbar', border: false, frame: false, width: 1000, margin: '5 0 0 0',
+            items: [
+                '->',
+                {
+                    xtype: 'bravo_button_save2', text: '급여 다시 가져오기', width: 150, height: 25,
+                    handler: 'resetSalary',
+                    bind: { hidden: '{!deductionrequest.isEditing || deductionrequest.isSelf}' }
+                }
+                // 2019년 8월 26일부로 일반 사용자는 등록 못하게 막음.
+                // {
+                //     xtype: 'bravo_button_upload', text: '편리한 연말정산 파일등록', width: 200, margin: '3 8 3 10', padding: 7,
+                //     handler: 'onBtnUploadConvenient',
+                //     bind: { hidden: '{!deductionrequest.isEditing}' }
+                // },
+                // {
+                //     xtype: 'container', padding: '1 10', layout: { type: 'vbox', align: 'left' }, flex: 1,
+                //     items: [
+                //         { style: 'color: blue;', xtype: 'label', text: '* 본 탭에서 국세청 편리한 연말정산 파일을 업로드 할 수 있습니다.' },
+                //         { style: 'color: blue;', xtype: 'label', text: '* 연말정산 간소화 파일은 국세청자료 탭에서 업로드 할 수 있습니다.' },
+                //         { style: 'color: blue;', xtype: 'label', text: '* 업로드 파일이름 예시) 홍길동(750101)-2018년자료.pdf' }
+                //     ]
+                // }
+            ]
+        },
+        {
+            xtype: 'fieldset', columnWidth: 1, layout: 'column', border: true, margin: '0 10 5 10', padding: 3,
+            code: 'header', title: '사원정보',
+            fieldDefaults: {
+                columnWidth: 0.33, margin: 2, padding: 1, labelAlign: 'right', labelWidth: 150
+            },
+            items: [
+                { xtype: 'hiddenfield', allowBlank: false, name: 'EID' },
+                { xtype: 'hiddenfield', allowBlank: false, name: 'PAYDAY' },
+                { xtype: 'hiddenfield', name: 'RPT_LANG'},
+                { xtype: 'hiddenfield', name: 'FORM_DATA'},
+                { xtype: 'hiddenfield', name: 'SETTLE_TYPE'},
+                /*{
+                    xtype: 'combo', fieldLabel: '연말정산구분', allowBlank: false, name: 'SETTLE_TYPE',
+                    readOnly: true, displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_base_settle_type}'}
+                },*/
+                {
+                    fieldLabel: '세대주여부', allowBlank: false, name: 'HOUSE_HEAD', reference: 'HOUSE_HEAD',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_base_house_head}'}
+                },
+                {
+                    xtype: 'bravo_combo_country', fieldLabel: '국적코드', allowBlank: false, name: 'NATION_CODE', reference: 'NATION_CODE',
+                    listeners: {change: 'onChangeNationCode'}
+                },
+                {
+                    fieldLabel: '성별', allowBlank: false, name: 'GENDER',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_base_gender}'}
+                },
+                {
+                    fieldLabel: '거주구분', allowBlank: false, name: 'RESID_STATUS',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_base_resid_status}'},
+                    listeners: {change: 'onChangeResidStatus'}
+                },
+                {
+                    fieldLabel: '거주지국코드', allowBlank: true, name: 'RESID_CODE',
+                    xtype: 'bravo_combo_country'
+                },
+                {
+                    fieldLabel: '인적공제항목변동여부', allowBlank: false, name: 'FAMILY_CHANGE',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_fam_change}'}
+                },
+                {
+                    fieldLabel: '분납신청여부', allowBlank: false, name: 'ALLOT_APPL',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_comm_yesno}'}
+                },
+                {
+                    fieldLabel: '원천징수율 선택', allowBlank: false, name: 'WHT_RATE',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_withholding_rate}'}
+                },
+                {
+                    fieldLabel: '외국법인 파견근로자여부', allowBlank: false, name: 'DISPATCH',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {store: '{yes_comm_yesno}'}
+                },
+                {
+                    fieldLabel: '당년 근무기간-시작일', allowBlank: false, readOnly: true,
+                    xtype: 'datefield', name: 'WORK_START'
+                },
+                {
+                    fieldLabel: '당년 근무기간-종료일', allowBlank: false, readOnly: true,
+                    xtype: 'datefield', name: 'WORK_END'
+                },
+                {
+                    fieldLabel: '표준세액공제 적용방법', allowBlank: false, name: 'STD_DEDUCT',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local', matchFieldWidth: false,
+                    bind: { store: '{yes_base_std_deduct}', hidden: '{deductionrequest.isSelf}' }
+                },
+                {
+                    fieldLabel: '단일세율적용여부', allowBlank: false, name: 'FLAT_RATE',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local', matchFieldWidth: false,
+                    bind: {store: '{yes_base_flat_rate}'}
+                },
+                {
+                    fieldLabel: '종교관련 종사자여부', name: 'RELIGIOUS_WORKER', itemId: 'itemIdReligiousWorker',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {
+                        store: '{yes_comm_yesno}',
+                        allowBlank: '{deductionrequest.ATT_YEAR < "2020"}'
+                    }
+                },
+                {
+                    fieldLabel: '종(전)사업장 유무', name: 'EX_WORK_FLAG', itemId: 'itemIdExworkYesNo',
+                    xtype: 'combo', displayField: 'desc', valueField: 'val', queryMode: 'local',
+                    bind: {
+                        store: {
+                            fields: ['val', 'desc'],
+                            data: [
+                                { val: '1', desc: '있음'},
+                                { val: '2', desc: '없음'}
+                            ]
+                        },
+                        allowBlank: '{deductionrequest.ATT_YEAR < "2020"}'
+                    }
+                },
+                {
+                    // fieldLabel: '연도중 출산회수',
+                    xtype: 'hiddenfield', name: 'CHILDBIRTH_COUNT'
+                },
+                {
+                    xtype: 'fieldcontainer', fieldLabel: '근무월', columnWidth: 0.85, layout: { type:'vbox', align: 'stretch'},
+                    items: [
+                        {
+                            xtype: 'container',
+                            layout: { type: 'table', columns: 12, tdAttrs: { style: 'width: 38px' } },
+                            defaults: {
+                                columnWidth: false, minWidth: false, inputValue: 'Y', uncheckedValue: 'N',
+                                checkChange: function () {
+                                    var me = this,
+                                        fn = function () {
+                                            me.labelEl.applyStyles({
+                                                color: me.checked ? '#888' : 'orange'
+                                            });
+                                        };
+                                    Ext.form.field.Checkbox.prototype.checkChange.call(me);
+                                    if (me.rendered) {
+                                        fn();
+                                    }
+                                },
+                                initEvents: Ext.emptyFn,
+                                onRender: function () {
+                                    var me = this,
+                                        fn = function () {
+                                            me.labelEl.applyStyles({
+                                                color: me.checked ? '#888' : 'orange'
+                                            });
+                                        };
+                                    Ext.form.field.Checkbox.prototype.onRender.call(this);
+                                    fn();
+                                }
+                            },
+                            items: [
+                                { xtype: 'checkboxfield', fieldLabel: '1월', labelWidth: 28, name: 'WKM_01' },
+                                { xtype: 'checkboxfield', fieldLabel: '2월', labelWidth: 28, name: 'WKM_02' },
+                                { xtype: 'checkboxfield', fieldLabel: '3월', labelWidth: 28, name: 'WKM_03' },
+                                { xtype: 'checkboxfield', fieldLabel: '4월', labelWidth: 28, name: 'WKM_04' },
+                                { xtype: 'checkboxfield', fieldLabel: '5월', labelWidth: 28, name: 'WKM_05' },
+                                { xtype: 'checkboxfield', fieldLabel: '6월', labelWidth: 28, name: 'WKM_06' },
+                                { xtype: 'checkboxfield', fieldLabel: '7월', labelWidth: 28, name: 'WKM_07' },
+                                { xtype: 'checkboxfield', fieldLabel: '8월', labelWidth: 28, name: 'WKM_08' },
+                                { xtype: 'checkboxfield', fieldLabel: '9월', labelWidth: 28, name: 'WKM_09' },
+                                { xtype: 'checkboxfield', fieldLabel: '10월', labelWidth: 28, name: 'WKM_10' },
+                                { xtype: 'checkboxfield', fieldLabel: '11월', labelWidth: 28, name: 'WKM_11' },
+                                { xtype: 'checkboxfield', fieldLabel: '12월', labelWidth: 28, name: 'WKM_12' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    xtype: 'toolbar', border: false, margin: '5 10 0 10', columnWidth: 0.15,
+                    bind: { hidden: '{!deductionrequest.isEditing}' },
+                    items: [
+                        '->',
+                        {
+                            xtype: 'bravo_button_save', height: 27, width: 100, formBind: false,
+                            handler: 'saveEmpInfo'
+                        }
+                    ]
+                },
+                { xtype: 'label', text: '* 근무월은 자동계산 되며 수기로 수정할 수 없습니다.', columnWidth: 1, margin: '3 10' }
+            ]
+        },
+        {
+            xtype: 'fieldset', columnWidth: 1, layout: 'column', border: true, margin: '5 10', padding: 3, title: '사원 주소/이메일',
+            defaults: { labelAlign: 'right', labelWidth: 60 }, hidden: BRAVO.ServerVals.YEAREND_EMP_SELF_UPDATE_HIDE,
+            items: [
+                { xtype: 'textfield', name: 'CURPOST', fieldLabel: '우편번호', maxLength: 7, columnWidth: 0.2 },
+                { xtype: 'textfield', name: 'CURBSCADDR', fieldLabel: '기본주소', maxLength: 50, columnWidth: 0.4 },
+                { xtype: 'textfield', name: 'CURDTLADDR', fieldLabel: '상세주소', maxLength: 50, columnWidth: 0.4 },
+                { xtype: 'textfield', name: 'EMAIL', fieldLabel: '이메일', maxLength: 300, columnWidth: 0.6, margin: '3 0' },
+                { xtype: 'toolbar', border: false, bind: { hidden: '{!deductionrequest.isEditing}' }, columnWidth: 0.4,
+                    items: [ '->',
+                        { xtype: 'bravo_button_save', height: 25, width: 90, formBind: false, handler: 'saveEmpAddress' }
+                    ]
+                }
+            ]
+        },
+        {
+            xtype: 'fieldset', columnWidth: 1, layout: { type: 'vbox', align: 'stretch' }, border: true, margin: '5 10', padding: 3, title: '현직장', code: 'work_now',
+            items: [
+                {
+                    xtype: 'container', layout: 'hbox', margin: 2,
+                    defaults: { padding: 1, labelAlign: 'right', labelWidth: 120, width: '25%' },
+                    items:[
+                        { xtype: 'ded_text_vat', fieldLabel: '사업자번호', labelWidth: 80, width: '30%', name: 'DV_VATID', readOnly: true },
+                        { xtype: 'datefield', fieldLabel: '당년 근무-시작일', allowBlank: false, name: 'ST_DATE', readOnly: true },
+                        { xtype: 'datefield', fieldLabel: '당년 근무-종료일', allowBlank: false, name: 'END_DATE', readOnly: true }
+                    ]
+                },
+                {
+                    xtype: 'container', layout: 'hbox', margin: 2,
+                    defaults: { padding: 1, labelAlign: 'right', labelWidth: 120, width: '25%' },
+                    items: [
+                        { xtype: 'textfield', name: 'COMP_NAME', labelWidth: 80, width: '30%', readOnly: true, fieldLabel: '직장명' },
+                        { xtype: 'datefield', fieldLabel: '당년 감면-시작일', name: 'EXEMPT_START' },
+                        { xtype: 'datefield', fieldLabel: '당년 감면-종료일', name: 'EXEMPT_END' },
+                        { width: 20, xtype: 'component' },
+                        { xtype: 'bravo_button_save', text: '감면기간 저장', width: 120, height: 23, handler: 'updateExemptDate',
+                        	bind: {
+                                hidden: '{!deductionrequest.isEditing}'
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            xtype: 'grid', reference: 'previousWorkList',
+            title: '전직장', width: 1000, margin: '5 10', height: 160,
+            plugins: [ 'cellediting' ],
+            header: {
+                itemPosition: 1, padding: 1,
+                items: [
+                    {
+                        xtype: 'bravo_button_add', ui: 'default-toolbar', padding: 4, margin: 1, width: 95, text: '전직장 추가',
+                        bind: { hidden: '{!deductionrequest.isEditing}' },
+                        handler: 'addWorkInfo'
+                    }
+                ]
+            },
+            store: {
+                fields: [
+                    { name: 'TPA_JOIN', defaultValue: 'N' },
+                    { name: 'COMP_NAME', allowBlank: false },
+                    { name: 'COMP_NAME_E' },
+                    { name: 'DV_VATID', allowBlank: false,
+                        serialize: function (v) {
+                            if( v){
+                                return v.replace(/-/g, '');
+                            }
+                            return v;
+                        }
+                    },
+                    { name: 'PAYDAY', type: 'string' },
+                    {
+                        name: 'ATT_YEAR', type: 'string',
+                        convert: function (v, rec) {
+                            var payday = rec.get('PAYDAY');
+                            return (payday && payday.length > 4 ) ? payday.substring(0, 4) : null
+                        },
+                        depends: ['PAYDAY']
+                    },
+                    { name: 'ST_DATE', type: 'date', dateFormat: 'Ymd'},
+                    { name: 'END_DATE', type: 'date', dateFormat: 'Ymd'},
+                    { name: 'EXEMPT_START', type: 'date', dateFormat: 'Ymd'},
+                    { name: 'EXEMPT_END', type: 'date', dateFormat: 'Ymd'}
+                ],
+                proxy: {
+                    type: 'ajax',
+                    paramsAsJson: true,
+                    actionMethods: {
+                        read: 'POST'
+                    },
+                    url: '/year-end/employee/deduction/request/work-info/previous'
+                }
+            },
+            columns: [
+                {
+                    text: '납세조합 여부',
+                    dataIndex: 'TPA_JOIN',
+                    renderer: function (v) {
+                        return (v === 'Y') ? '예' : '아니오';
+                    },
+                    editor: {
+                        xtype: 'combobox', valueField: 'val', displayField: 'desc', align: 'center',
+                        store: {
+                            fields: [],
+                            data: [
+                                { desc: '예', val: 'Y' },
+                                { desc: '아니오', val: 'N' }
+                            ]
+                        }
+                    }
+                },
+                {
+                    text: "#{key_compname}",
+                    dataIndex: 'COMP_NAME',
+                    flex: 1,
+                    editor: {
+                        xtype: 'textfield'
+                    }
+                },
+                {
+                    text: '회사명(영문)',
+                    dataIndex: 'COMP_NAME_E',
+                    flex: 1,
+                    editor: {
+                        xtype: 'textfield'
+                    }
+                },
+                {
+                    text: "#{key_vatcode}",
+                    dataIndex: 'DV_VATID',
+                    width: 95,
+                    editor: {
+                        xtype: 'ded_text_vat'
+                    }
+                },
+                {
+                    xtype: 'datecolumn',
+                    text: "#{key_startdate}",
+                    dataIndex: 'ST_DATE',
+                    width: 85,
+                    align: 'center',
+                    format: 'Y-m-d',
+                    editor: {
+                        xtype: 'datefield'
+                    }
+                },
+                {
+                    xtype: 'datecolumn',
+                    text: "#{key_enddate}",
+                    dataIndex: 'END_DATE',
+                    width: 85,
+                    align: 'center',
+                    format: 'Y-m-d',
+                    editor: {
+                        xtype: 'datefield'
+                    }
+                },
+                {
+                    xtype: 'datecolumn',
+                    text: "#{key_exemptstart}",
+                    dataIndex: 'EXEMPT_START',
+                    width: 85,
+                    align: 'center',
+                    format: 'Y-m-d',
+                    editor: {
+                        xtype: 'datefield'
+                    }
+                },
+                {
+                    xtype: 'datecolumn',
+                    text: "#{key_exemptend}",
+                    dataIndex: 'EXEMPT_END',
+                    width: 85,
+                    align: 'center',
+                    format: 'Y-m-d',
+                    editor: {
+                        xtype: 'datefield'
+                    }
+                },
+                {
+                    xtype: 'widgetcolumn', width: 60,
+                    bind: {
+                        hidden: '{!deductionrequest.isEditing}'
+                    },
+                    widget: {
+                        xtype: 'bravo_button_save', text: '', width: 50,
+                        handler: 'saveWorkInfo'
+                    }
+                },
+                {
+                    xtype: 'widgetcolumn', width: 60,
+                    bind: {
+                        hidden: '{!deductionrequest.isEditing}'
+                    },
+                    widget: {
+                        xtype: 'bravo_button_delete', text: '', width: 50,
+                        handler: 'deleteWorkInfo'
+                    }
+                }
+            ],
+            dockedItems: [
+                {
+                    xtype: 'toolbar', dock: 'bottom',
+                    items: [
+                        '->',
+                        {
+                            xtype: 'button', iconCls: 'x-tbar-loading', text: '다시읽기',
+                            handler: function () {
+                                var grid = this.up('grid');
+
+                                if (grid) {
+                                    grid.store.reload();
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            xtype: 'fieldcontainer', title: '공제액', width: 1000, margin: '5 10', layout: {type: 'column', align: 'left'}, columnWidth: 1,
+            items: [
+                {
+                    xtype: 'segmentedbutton', reference: 'exemptSegButton',
+                    defaults: { xtype: 'bravo_button_add', width: 200, padding: 3 },
+                    items: [
+                        { text: '외국인 근로자 세액감면', margin: 3, padding: 7, value: 'foreignTaxExempt' },
+                        { text: '중소기업 취업자 감면', margin: 3, padding: 7, value: 'smallBizEmpExempt' }
+                    ]
+                }
+            ]
+        },
+        {
+            xtype: 'container', reference: 'foreignTaxExempt', hidden: true, margin: 10, width: 1000, layout: { type: 'vbox', align: 'stretch'},
+            items: []
+        },
+        {
+            xtype: 'fieldset', reference: 'smallBizEmpExempt', title: '중소기업 취업자 감면',
+            layout: {type: 'hbox', align: 'left'}, width: 1000,  margin: 10, padding: 5, hidden: true,
+            defaultType: 'datefield',
+            fieldDefaults: { width: 200, margin: 2, padding: 1, labelAlign: 'right', labelWidth: 100 },
+            items: [
+                  { fieldLabel: '최초취업일', name: 'F30A' }
+                , { xtype: 'label', text: '(현직장의 취업일이 아닌 중소기업감면을 받는 최초취업일입니다.)', width: 380}
+                , { fieldLabel: '감면기간종료일', name: 'F30B'}
+                , { fieldLabel: '세액감면액', name: 'F30C', xtype: 'hiddenfield'}
+                , {
+                    xtype: 'toolbar', border: false, margin: 0, padding: 5, flex: 1,
+                    items: ['->',
+                        {
+                            xtype: 'bravo_button_save', width: 90, height: 28,
+                            handler: 'saveSmallBizEmpExempt', formBind: false,
+                            bind: {
+                                hidden: '{!deductionrequest.isEditing}'
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+
+    initSettings: function () {
+        this.lookupReference('exemptSegButton').setValue(null);
+        this.reset();
+    }
+});
