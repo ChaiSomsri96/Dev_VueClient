@@ -1,0 +1,187 @@
+<template>
+    <div>
+        <!-- Header 영역 -->
+        <ui-header :msg="'기타소득 관리'"/>
+        <!-- Body 영역 -->
+        <div class="content-body">
+            <bizinc-other-tab></bizinc-other-tab>
+            <border-box width="260" v-slot="slotProps">
+                <border-box-item title="사업장" :width="slotProps.width">
+                    <ui-dropdown :items="searchOptionData.BIZUNIT_CODE.items"
+                                 :value="searchOptionData.BIZUNIT_CODE.value"
+                                 @change="searchOptionData.BIZUNIT_CODE.value=$event.value;"
+                                 :options="{
+                                     valueField  : 'BP_CODE',
+                                     labelField  : 'DV_NAME',
+                                     tooltipField: 'DV_NAME'}"/>
+                </border-box-item>
+                <border-box-item title="소득자" :width="slotProps.width">
+                    <ui-dropdown :items="searchOptionData.EARNER_CODE.items"
+                                 :value="searchOptionData.EARNER_CODE.value"
+                                 @change="searchOptionData.EARNER_CODE.value=$event.value;"
+                                 :options="{
+                                           valueField  : 'EARNER_CODE',
+                                           labelField  : 'EARNER_NAME',
+                                           tooltipField: 'EARNER_NAME'}"/>
+                </border-box-item>
+                <border-box-item title="귀속월" :width="slotProps.width" multi>
+                    <ui-month-picker v-model="searchOptionData.PAY_START_MONTH.value" />
+                    <span>~</span>
+                    <ui-month-picker v-model="searchOptionData.PAY_END_MONTH.value" />
+                </border-box-item>
+                <border-box-item button>
+                    <button type="button" id="btnSearch" class="btn btn-md line-1 ml-10" @click="loadGridData">
+                        <span>검색</span>
+                    </button>
+                </border-box-item>
+            </border-box>
+            <button-panel
+                btnType="top"
+                v-bind:download=true
+                v-on:download="downloadRealGridExcel">
+            </button-panel>
+            <div>
+                <div id="other-query-grid" class="realgrid-type-style" style="width: 100%; height: 440px;"></div>
+            </div>
+        </div>
+    </div>
+</template>
+<script>
+    import grid from '@/mixin/payroll-grid';
+    import BizincOtherTab from './BizincOtherTab';
+    import ButtonPanel from "@/components/common/ButtonPanel";
+    import BorderBox from '@/components/common/BorderBox';
+    import UiMonthPicker from '@/components/common/UiMonthPicker';
+    import BorderBoxItem from '@/components/common/BorderBoxItem';
+
+    export default {
+        mixins: [grid],
+        name: 'bizinc-other-query',
+        components: {
+            BizincOtherTab,
+            ButtonPanel,
+            UiMonthPicker,
+            BorderBox,
+            BorderBoxItem
+        },
+        data() {
+            return {
+                searchOptionData: {
+                    EARNER_CODE: {
+                        value: '',
+                        items: []
+                    },
+                    BIZUNIT_CODE: {
+                        value: '',
+                        items: []
+                    },
+                    PAY_START_MONTH: {
+                        value: this.getFirstMonthOfTheYear()
+                    },
+                    PAY_END_MONTH: {
+                        value: this.getCurrentMonth()
+                    }
+                },
+                fields: [
+                    {fieldName: 'DV_NAM', dataType: 'text'},
+                    {fieldName: 'INCOME_TYPE', dataType: 'text'},
+                    {fieldName: 'EARNER_NAM', dataType: 'text'},
+                    {fieldName: 'RRN', dataType: 'text'},
+                    {fieldName: 'PAY_MONTH', dataType: "datetime", datetimeFormat: "yyyyMM"},
+                    {fieldName: 'PAY_DATE', dataType: "datetime", datetimeFormat: "yyyyMMdd"},
+                    {fieldName: 'PAY_AMOUNT', dataType: 'number'},
+                    {fieldName: 'EXPENSE', dataType: 'number'},
+                    {fieldName: 'AMT', dataType: 'number'},
+                    {fieldName: 'TAX_RATE', dataType: 'number'},
+                    {fieldName: 'INCOME_TAX', dataType: 'number'},
+                    {fieldName: 'RESID_TAX', dataType: 'number'},
+                    {fieldName: 'ARGO_TAX', dataType: 'number'}
+                ],
+                columns: [
+                    {fieldName: 'DV_NAM', header: '사업장', width: 100, styleName: "left-column"},
+                    {fieldName: 'INCOME_TYPE', header: '소득구분', width: 100, styleName: "left-column"},
+                    {fieldName: 'EARNER_NAM', header: '소득자', width: 100, styleName: "left-column"},
+                    {fieldName: 'RRN', header: '주민(사업자)등록번호', width: 100, styleName: "left-column"},
+                    {fieldName: 'PAY_MONTH', header: '귀속월', width: 100, datetimeFormat: "yyyy.MM"},
+                    {fieldName: 'PAY_DATE', header: '지급일', width: 100, datetimeFormat: "yyyy.MM.dd"},
+                    {fieldName: 'PAY_AMOUNT', header: '지급총액', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                    {fieldName: 'EXPENSE', header: '필요경비', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                    {fieldName: 'AMT', header: '소득금액', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                    {fieldName: 'TAX_RATE', header: '세율(%)', width: 100, styleName: "right-column"},
+                    {fieldName: 'INCOME_TAX', header: '소득세', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                    {fieldName: 'RESID_TAX', header: '지방소득세', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                    {fieldName: 'ARGO_TAX', header: '농특세', width: 100, styleName: "right-column", numberFormat: "#,##0", nanText: '0',
+                        footer: { header: "0", expression: "sum", numberFormat: "#,##0" }
+                    },
+                ]
+            }
+        },
+        methods: {
+            async loadGridData() {
+                try {
+                    const {data} = await this.$httpPostBody({
+                        url: '/bizinc/ext-income/getExtIncome',
+                        param: this.getParamData()
+                    })
+
+                    this.setRealgridData(data || []);
+                } catch(e) {
+                    console.error(e)
+                }
+            },
+
+            getParamData: function() {
+                let params = {};
+                let keys = Object.keys(this.searchOptionData);
+                keys.forEach((key) => {
+                    params[key] = this.searchOptionData[key].value;
+                });
+
+                return params;
+            },
+
+            async getDropdownData(obj) {
+                try {
+                    let {data} = await this.$httpGet( obj.url, obj.params || {});
+                    return data;
+                } catch(e) {
+                    console.log(e)
+                }
+            },
+
+            async loadDropdownData() {
+                // 신고관리 사업장
+                this.searchOptionData.BIZUNIT_CODE.items = await this.getDropdownData({
+                    url: '/system/setting/division-mgt/list',
+                    params: {}
+                });
+
+                // 소득자 구분
+                this.searchOptionData.EARNER_CODE.items  = await this.getDropdownData({
+                    url: '/earner/selectResidencePersonal',
+                    params: {}
+                });
+            }
+        },
+        mounted() {
+            this.createRealGrid({
+                'domId': 'other-query-grid',
+                autoLoad: false
+            });
+
+            this.loadDropdownData();
+
+            this.loadGridData();
+        }
+    }
+</script>

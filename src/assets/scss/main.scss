@@ -1,0 +1,120 @@
+:root {
+    --box--shadow--color: 0, 0, 0; 
+}
+.vdp-datepicker .ui-month-picker__calendar {
+    position: fixed !important;
+    border-radius: 3px;   
+    border: 0 !important;
+    -webkit-box-shadow: 0 2px 4px 3px rgba(0, 0, 0, 0.04), 0 1px 3px 1px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px 3px rgba(0, 0, 0, 0.04), 0 1px 3px 1px rgba(0, 0, 0, 0.1);   
+    margin-top: 8px;
+    z-index: 1011;
+}
+.divide-right.radio-container {
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+    -webkit-box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+    -webkit-transition: 0.2s;
+    transition: 0.2s;
+    border-radius: 0.25rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;    
+}
+.divide-right.month-picker-container .form-control{
+    box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+    -webkit-box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+}
+.divide-right.label-container {
+    display: flex;
+    align-items: center;
+    box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+    -webkit-box-shadow: 0 0 0 2px transparent inset, 0 0 0 1px #aaa inset;
+    -webkit-transition: 0.2s;
+    transition: 0.2s;
+    border-radius: 0.25rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;  
+}
+
+.divide-right .label-button {
+    width: 100%;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    text-align: left;
+    font-weight: normal;
+}
+
+.grid-bold-column {
+    font-weight: bold;
+} 
+.grid-link-column {
+    text-decoration: underline;
+    font-weight: bold;
+    cursor: pointer;
+}
+.rg-data-row .right-column {
+    text-align: right;
+}
+.rg-data-row .left-column {
+    text-align: left;
+}
+
+.hand-pointer {
+    cursor: pointer;
+}
+
+.multi-element-line .input-group:not(:first-child) .form-control,
+.multi-element-line .ui-month-picker:not(:first-child) .input-group .form-control
+{
+    border-radius: 4px;
+}
+
+.splitter-divide .box.type2 
+{
+    min-width: 0px;
+}
+
+.footer-toolbar {
+    justify-content: center;
+    display: flex;
+    margin-top: 20px;
+}
+
+tr .multi-line-css {
+    white-space: pre;
+}
+.multi-line-css-header {
+    white-space: pre;
+}
+
+/*
+.realgrid-type-style .rg-body .rg-table tr td, 
+.realgrid-type-style .rg-fixed-body .rg-table tr td {
+    border-top: 1px solid #ededed;
+    border-right: 1px solid #ededed;
+    border-bottom: none;
+    border-left: none;
+    height: 0px;
+    background: none;
+} */
+
+/*
+.pppppppp .realgrid-type-style .rg-body .rg-table tr:last-child td, 
+.pppppppp .realgrid-type-style .rg-fixed-body .rg-table tr:last-child td {
+    border-bottom: 1px solid #ededed;
+    background-color: 'red';
+} */
+
+/*
+.rg-body .rg-table tr.rg-data-row:nth-last-child(2) {
+    background-color: red;
+} */
+
+.flex {
+    display: flex;
+}
+.align-items-center {
+    align-items: center;
+}
